@@ -5,8 +5,9 @@ name: Sync Upstream
 
 on:
   schedule:
-    # Twice daily: 06:00 and 18:00 UTC
+    # Three times daily: 06:00, 12:00, and 18:00 UTC
     - cron: '0 6 * * *'
+    - cron: '0 12 * * *'
     - cron: '0 18 * * *'
   workflow_dispatch:
 
