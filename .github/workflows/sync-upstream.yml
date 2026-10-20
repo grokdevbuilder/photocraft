@@ -1,0 +1,45 @@
+name: Sync Upstream
+
+# Keeps this fork's main branch current with storytold/photocraft.
+# Runs on a schedule and can also be triggered manually.
+
+on:
+  schedule:
+    # Twice daily: 06:00 and 18:00 UTC
+    - cron: '0 6 * * *'
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout fork (with full history for merge)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN || secrets.GH_PAT || github.token}}
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/storytold/photocraft.git
+
+      - name: Fetch upstream
+        run: git fetch upstream main
+
+      - name: Merge upstream/main into main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Only merge if there are new commits
+          if ! git merge-base --is-ancestor upstream/main HEAD; then
+            git merge upstream/main -m "Sync: merge upstream/main from storytold/photocraft"
+            git push origin main
+            echo "Synced new commits from upstream."
+          else
+            echo "Fork is already up to date with upstream."
+          fi
